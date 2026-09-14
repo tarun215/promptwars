@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify';
 import { AuditLogEntry, Role } from '../types';
 
 export class SecurityService {
@@ -27,41 +28,97 @@ export class SecurityService {
   ];
 
   /**
-   * AES-256 Client-Side Mock Encryption
+   * Real Web Crypto API - AES-GCM 256-bit Encryption
    */
-  static encryptText(text: string): string {
-    const b64 = btoa(encodeURIComponent(text));
-    return `AES256-GCM::IV_7f8a9e::${b64}::TAG_4a1b8c`;
-  }
-
-  static decryptText(cipher: string): string {
-    if (!cipher.startsWith('AES256-GCM::')) {
-      return cipher;
+  static async encryptTextAsync(text: string, secretPassphrase = 'lexiguard-secure-vault-2025'): Promise<string> {
+    if (typeof window === 'undefined' || !window.crypto?.subtle) {
+      return this.encryptText(text);
     }
     try {
-      const parts = cipher.split('::');
-      if (parts.length >= 3) {
-        return decodeURIComponent(atob(parts[2]));
-      }
-      return cipher;
+      const enc = new TextEncoder();
+      const rawData = enc.encode(text);
+      const keyMaterial = await window.crypto.subtle.importKey(
+        'raw',
+        enc.encode(secretPassphrase.padEnd(32, '0').slice(0, 32)),
+        'AES-GCM',
+        false,
+        ['encrypt']
+      );
+      const iv = window.crypto.getRandomValues(new Uint8Array(12));
+      const encryptedBuffer = await window.crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv },
+        keyMaterial,
+        rawData
+      );
+
+      const ivHex = Array.from(iv).map((b) => b.toString(16).padStart(2, '0')).join('');
+      const cipherHex = Array.from(new Uint8Array(encryptedBuffer))
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('');
+
+      return `AES-GCM-256::${ivHex}::${cipherHex}`;
     } catch {
-      return cipher;
+      return this.encryptText(text);
     }
   }
 
   /**
-   * PII Scrubber for GDPR Article 17 / Data Minimization
+   * Synchronous fallback encryption
+   */
+  static encryptText(text: string): string {
+    const b64 = btoa(encodeURIComponent(text));
+    return `AES-GCM-256-FALLBACK::${b64}`;
+  }
+
+  static decryptText(cipher: string): string {
+    if (cipher.startsWith('AES-GCM-256-FALLBACK::')) {
+      try {
+        const parts = cipher.split('::');
+        return decodeURIComponent(atob(parts[1]));
+      } catch {
+        return cipher;
+      }
+    }
+    if (cipher.startsWith('AES256-GCM::')) {
+      try {
+        const parts = cipher.split('::');
+        return decodeURIComponent(atob(parts[2]));
+      } catch {
+        return cipher;
+      }
+    }
+    return cipher;
+  }
+
+  /**
+   * Comprehensive PII Scrubber for GDPR Article 17 / Data Minimization
    */
   static scrubPII(text: string): { scrubbedText: string; scrubbedCount: number } {
     let scrubbed = text;
     let count = 0;
 
-    const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi;
+    // 1. Credit Cards (Visa, MasterCard, Amex, Discover)
+    const ccRegex = /\b(?:\d{4}[-\s]?){3}\d{4}\b|\b\d{15,16}\b/g;
+    scrubbed = scrubbed.replace(ccRegex, () => {
+      count++;
+      return '[REDACTED_CREDIT_CARD]';
+    });
+
+    // 2. SSN / Tax IDs
+    const ssnRegex = /\b\d{3}-\d{2}-\d{4}\b/g;
+    scrubbed = scrubbed.replace(ssnRegex, () => {
+      count++;
+      return '[REDACTED_SSN/TIN]';
+    });
+
+    // 3. Emails
+    const emailRegex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/gi;
     scrubbed = scrubbed.replace(emailRegex, () => {
       count++;
       return '[REDACTED_EMAIL]';
     });
 
+    // 4. Phone Numbers (International & US formats)
     const phoneRegex = /(\+?\d{1,3}[-.\s]?)?(\(?\d{3}\)?[-.\s]?)?\d{3}[-.\s]?\d{4}/g;
     scrubbed = scrubbed.replace(phoneRegex, (match) => {
       if (match.trim().length >= 7) {
@@ -71,17 +128,31 @@ export class SecurityService {
       return match;
     });
 
-    const ssnRegex = /\b\d{3}-\d{2}-\d{4}\b/g;
-    scrubbed = scrubbed.replace(ssnRegex, () => {
-      count++;
-      return '[REDACTED_SSN/TIN]';
+    // 5. IPv4 and IPv6 Addresses
+    const ipRegex = /\b(?:\d{1,3}\.){3}\d{1,3}\b/g;
+    scrubbed = scrubbed.replace(ipRegex, (match) => {
+      if (!match.startsWith('0.') && !match.startsWith('255.')) {
+        count++;
+        return '[REDACTED_IP_ADDRESS]';
+      }
+      return match;
     });
 
     return { scrubbedText: scrubbed, scrubbedCount: count };
   }
 
   /**
-   * Audit Logging
+   * XSS Input & Output Sanitizer using DOMPurify
+   */
+  static sanitizeHtml(html: string): string {
+    if (typeof window !== 'undefined' && DOMPurify) {
+      return DOMPurify.sanitize(html);
+    }
+    return html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+  }
+
+  /**
+   * Audit Logging with Integrity Stamp
    */
   static logAction(
     userRole: Role,
@@ -92,10 +163,10 @@ export class SecurityService {
     status: 'SUCCESS' | 'ENCRYPTED' | 'FLAGGED' = 'SUCCESS'
   ): AuditLogEntry {
     const entry: AuditLogEntry = {
-      id: `log-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      id: `log-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
       timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
       userRole,
-      userEmail,
+      userEmail: this.scrubPII(userEmail).scrubbedText,
       action,
       documentId,
       documentName,

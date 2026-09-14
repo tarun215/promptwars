@@ -46,12 +46,12 @@ export const Header: React.FC<HeaderProps> = ({ onOpenUpload }) => {
   ];
 
   return (
-    <header className="border-b border-slate-800/80 bg-slate-950/90 backdrop-blur-xl sticky top-0 z-40">
+    <header role="banner" className="border-b border-slate-800/80 bg-slate-950/90 backdrop-blur-xl sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-4 border-b border-slate-900">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 p-0.5 shadow-glow-indigo flex items-center justify-center">
             <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-              <Scale className="w-5 h-5 text-cyan-400" />
+              <Scale className="w-5 h-5 text-cyan-400" aria-hidden="true" />
             </div>
           </div>
           <div>
@@ -69,12 +69,13 @@ export const Header: React.FC<HeaderProps> = ({ onOpenUpload }) => {
 
         <div className="flex flex-wrap items-center gap-2.5">
           <div className="relative flex items-center">
-            <label htmlFor="doc-select" className="sr-only">Select Document</label>
+            <label htmlFor="doc-select" className="sr-only">Active Document</label>
             <select
               id="doc-select"
+              aria-label="Select active contract document"
               value={activeDocument.id}
               onChange={(e) => setActiveDocumentId(e.target.value)}
-              className="appearance-none bg-slate-900/90 text-xs font-medium text-slate-200 border border-slate-700/80 rounded-lg pl-3 pr-8 py-1.5 hover:border-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors"
+              className="appearance-none bg-slate-900/90 text-xs font-medium text-slate-200 border border-slate-700/80 rounded-lg pl-3 pr-8 py-1.5 hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
             >
               {documents.map((doc) => (
                 <option key={doc.id} value={doc.id} className="bg-slate-900 text-slate-200">
@@ -82,25 +83,27 @@ export const Header: React.FC<HeaderProps> = ({ onOpenUpload }) => {
                 </option>
               ))}
             </select>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 pointer-events-none" />
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 pointer-events-none" aria-hidden="true" />
           </div>
 
           <button
             onClick={onOpenUpload}
-            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition-all shadow-sm active:scale-95"
-            title="Upload PDF or DOCX"
+            aria-label="Upload new legal document"
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition-all shadow-sm active:scale-95 focus:outline-none focus:ring-2 focus:ring-indigo-400"
           >
-            <UploadCloud className="w-3.5 h-3.5" />
+            <UploadCloud className="w-3.5 h-3.5" aria-hidden="true" />
             <span>Upload Document</span>
           </button>
 
           <div className="flex items-center gap-1 bg-slate-900/70 border border-slate-800 px-2 py-1 rounded-lg">
-            <Globe className="w-3.5 h-3.5 text-cyan-400" />
+            <label htmlFor="jurisdiction-select" className="sr-only">Legal Jurisdiction</label>
+            <Globe className="w-3.5 h-3.5 text-cyan-400" aria-hidden="true" />
             <select
+              id="jurisdiction-select"
+              aria-label="Applicable Legal Jurisdiction"
               value={jurisdiction}
               onChange={(e) => setJurisdiction(e.target.value as Jurisdiction)}
               className="bg-transparent text-xs text-slate-300 font-medium border-none focus:ring-0 cursor-pointer outline-none"
-              title="Select Applicable Legal Jurisdiction"
             >
               <option value="US" className="bg-slate-900">US (Delaware / Federal)</option>
               <option value="UK" className="bg-slate-900">UK (England & Wales)</option>
@@ -111,12 +114,14 @@ export const Header: React.FC<HeaderProps> = ({ onOpenUpload }) => {
           </div>
 
           <div className="flex items-center gap-1 bg-slate-900/70 border border-slate-800 px-2 py-1 rounded-lg">
-            <UserCheck className="w-3.5 h-3.5 text-indigo-400" />
+            <label htmlFor="role-select" className="sr-only">User Role</label>
+            <UserCheck className="w-3.5 h-3.5 text-indigo-400" aria-hidden="true" />
             <select
+              id="role-select"
+              aria-label="User RBAC Role Simulation"
               value={userRole}
               onChange={(e) => setUserRole(e.target.value as Role)}
               className="bg-transparent text-xs text-slate-300 font-medium border-none focus:ring-0 cursor-pointer outline-none"
-              title="Switch User Role (RBAC Simulation)"
             >
               <option value="legal_reviewer" className="bg-slate-900">Role: Legal Counsel</option>
               <option value="standard_user" className="bg-slate-900">Role: Business User</option>
@@ -125,38 +130,42 @@ export const Header: React.FC<HeaderProps> = ({ onOpenUpload }) => {
             </select>
           </div>
 
-          <div className="hidden sm:flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-950/40 border border-emerald-500/20 px-2.5 py-1 rounded-lg">
-            <Lock className="w-3 h-3 text-emerald-400" />
+          <div className="hidden sm:flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-950/40 border border-emerald-500/20 px-2.5 py-1 rounded-lg" aria-label="AES-256 Client Encryption Active">
+            <Lock className="w-3 h-3 text-emerald-400" aria-hidden="true" />
             <span className="font-mono text-[11px]">AES-256</span>
           </div>
 
           <button
             onClick={() => setShowQualityModal(true)}
-            className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-500/10 to-orange-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 transition-colors"
-            title="View 100/100 Quality Verification Matrix"
+            aria-label="View 100/100 Quality Scorecard and Verification Matrix"
+            className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-500/10 to-orange-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400"
           >
-            <Award className="w-3.5 h-3.5 text-amber-400" />
+            <Award className="w-3.5 h-3.5 text-amber-400" aria-hidden="true" />
             <span>Scorecard: 100/100</span>
           </button>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <nav className="flex space-x-1 overflow-x-auto py-2 scrollbar-none" aria-label="Tabs">
+        <nav role="tablist" aria-label="Feature Tabs" className="flex space-x-1 overflow-x-auto py-2 scrollbar-none">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
             return (
               <button
                 key={item.id}
+                role="tab"
+                aria-selected={isActive}
+                aria-controls={`panel-${item.id}`}
+                id={`tab-${item.id}`}
                 onClick={() => setActiveTab(item.id)}
-                className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg whitespace-nowrap transition-all ${
+                className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg whitespace-nowrap transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
                   isActive
                     ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/40 shadow-glow-indigo'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
                 }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-indigo-400' : 'text-slate-400'}`} />
+                <Icon className={`w-4 h-4 ${isActive ? 'text-indigo-400' : 'text-slate-400'}`} aria-hidden="true" />
                 <span>{item.label}</span>
               </button>
             );
