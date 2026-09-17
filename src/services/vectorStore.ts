@@ -1,4 +1,5 @@
 import { CitationReference, LegalDocument } from '../types';
+import { vectorEmbeddingCache } from './cacheService';
 
 export interface EmbeddedChunk {
   id: string;
@@ -6,11 +7,12 @@ export interface EmbeddedChunk {
   clauseId: string;
   clauseTitle: string;
   text: string;
-  vector: number[];
+  vector: Float32Array;
 }
 
 export class VectorStoreService {
   private static chunks: EmbeddedChunk[] = [];
+  private static readonly VOCAB_SIZE = 256;
 
   private static tokenize(text: string): string[] {
     return text
@@ -20,9 +22,15 @@ export class VectorStoreService {
       .filter((w) => w.length > 2);
   }
 
-  private static getVector(tokens: string[]): number[] {
-    const vocabSize = 256;
-    const vector = new Array(vocabSize).fill(0);
+  /**
+   * High-Efficiency Float32Array Vector Generation with LRU Caching
+   */
+  static getVector(tokens: string[]): Float32Array {
+    const cacheKey = tokens.slice(0, 20).join('-');
+    const cached = vectorEmbeddingCache.get(cacheKey);
+    if (cached) return cached;
+
+    const vector = new Float32Array(this.VOCAB_SIZE);
 
     for (let i = 0; i < tokens.length; i++) {
       const token = tokens[i];
@@ -31,17 +39,30 @@ export class VectorStoreService {
         hash = (hash << 5) - hash + token.charCodeAt(j);
         hash |= 0;
       }
-      const index = Math.abs(hash) % vocabSize;
+      const index = Math.abs(hash) % this.VOCAB_SIZE;
       vector[index] += 1.0 / Math.sqrt(tokens.length || 1);
     }
 
-    const magnitude = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0)) || 1;
-    return vector.map((v) => v / magnitude);
+    // L2-Normalization for unit sphere cosine distance
+    let sumSq = 0;
+    for (let i = 0; i < this.VOCAB_SIZE; i++) {
+      sumSq += vector[i] * vector[i];
+    }
+    const magnitude = Math.sqrt(sumSq) || 1;
+    for (let i = 0; i < this.VOCAB_SIZE; i++) {
+      vector[i] /= magnitude;
+    }
+
+    vectorEmbeddingCache.set(cacheKey, vector);
+    return vector;
   }
 
-  private static cosineSimilarity(vecA: number[], vecB: number[]): number {
+  /**
+   * Fast Vector Dot Product (Cosine Similarity on Unit Vectors)
+   */
+  private static cosineSimilarity(vecA: Float32Array, vecB: Float32Array): number {
     let dot = 0;
-    for (let i = 0; i < vecA.length; i++) {
+    for (let i = 0; i < this.VOCAB_SIZE; i++) {
       dot += vecA[i] * vecB[i];
     }
     return Math.max(0, Math.min(1, dot));
@@ -102,5 +123,13 @@ export class VectorStoreService {
       snippet: item.chunk.text.length > 180 ? item.chunk.text.substring(0, 180) + '...' : item.chunk.text,
       relevanceScore: Math.round(item.score * 100) / 100
     }));
+  }
+
+  static getIndexedCount(): number {
+    return this.chunks.length;
+  }
+
+  static clearIndex(): void {
+    this.chunks = [];
   }
 }

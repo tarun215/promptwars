@@ -2,6 +2,17 @@ export type Role = 'admin' | 'legal_reviewer' | 'standard_user' | 'compliance_au
 
 export type Jurisdiction = 'US' | 'UK' | 'EU' | 'INDIA' | 'GLOBAL';
 
+export type SecurityPermission = 
+  | 'VIEW_DOC'
+  | 'SIMPLIFY_DOC'
+  | 'RAG_QUERY'
+  | 'COMPARE_DOC'
+  | 'RUN_SIMULATION'
+  | 'EXPORT_PDF'
+  | 'AUDIT_LOG_VIEW'
+  | 'GDPR_PURGE'
+  | 'ADMIN_OVERRIDE';
+
 export type ClauseCategory = 
   | 'risk'
   | 'obligation'
@@ -194,6 +205,8 @@ export interface AuditLogEntry {
   documentName?: string;
   ipAddress: string;
   status: 'SUCCESS' | 'ENCRYPTED' | 'FLAGGED';
+  hash?: string;
+  prevHash?: string;
 }
 
 export interface TokenUsageMetric {
@@ -206,4 +219,5 @@ export interface TokenUsageMetric {
   totalTokens: number;
   costUsd: number;
   latencyMs: number;
+  cachedPercentage?: number;
 }

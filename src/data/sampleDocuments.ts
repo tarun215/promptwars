@@ -520,3 +520,5 @@ export const LEGAL_GLOSSARY = [
     jurisdictionNotes: 'Standard requirement in commercial lease and construction insurance schedules.'
   }
 ];
+
+export const sampleDocuments = SAMPLE_DOCUMENTS;

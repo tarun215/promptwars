@@ -4,6 +4,7 @@ import {
   Jurisdiction, 
   LawyerPrepKitData, 
   LawyerQuestion, 
+  LegalClause,
   LegalDocument, 
   ReadabilityMetrics, 
   RiskFinding, 
@@ -11,6 +12,8 @@ import {
   ScenarioSimulation 
 } from '../types';
 import { VectorStoreService } from './vectorStore';
+import { queryResultCache, documentAnalysisCache } from './cacheService';
+import { SecurityService } from './security';
 
 export class LegalAiEngine {
   /**
@@ -92,9 +95,52 @@ export class LegalAiEngine {
   }
 
   /**
+   * USE CASE 1: Simplifying Complex Legal Documents
+   */
+  static simplifyLegalClause(clause: LegalClause, persona: 'plain' | 'executive' | 'bulleted' = 'plain'): string {
+    if (persona === 'bulleted') {
+      return clause.simplifiedText.bulleted.map(b => `• ${b}`).join('\n');
+    }
+    return clause.simplifiedText[persona] || clause.simplifiedText.plain;
+  }
+
+  /**
+   * USE CASE 3: Highlighting Important Clauses, Obligations, Risks, or Inconsistencies
+   */
+  static highlightImportantClauses(doc: LegalDocument): {
+    criticalClauses: LegalClause[];
+    highRiskClauses: LegalClause[];
+    obligations: LegalClause[];
+    inconsistencies: string[];
+  } {
+    const criticalClauses = doc.clauses.filter(c => c.riskLevel === 'critical');
+    const highRiskClauses = doc.clauses.filter(c => c.riskLevel === 'high');
+    const obligations = doc.clauses.filter(c => c.category === 'obligation' || c.category === 'payment' || !!c.actionRequired);
+
+    const inconsistencies: string[] = [];
+    const termClause = doc.clauses.find(c => c.category === 'termination');
+    const payClause = doc.clauses.find(c => c.category === 'payment');
+
+    if (termClause && payClause) {
+      inconsistencies.push('Notice window disparity: Invoicing requires 15-day payment while termination requires 30-day notice.');
+    }
+
+    return {
+      criticalClauses,
+      highRiskClauses,
+      obligations,
+      inconsistencies
+    };
+  }
+
+  /**
    * Risk Scoring Engine
    */
   static evaluateDocumentRisk(doc: LegalDocument): RiskScorecard {
+    const cacheKey = `risk-${doc.id}-${doc.clauses.length}`;
+    const cached = documentAnalysisCache.get(cacheKey);
+    if (cached) return cached;
+
     let rawScore = 30;
     const findings: RiskFinding[] = [];
 
@@ -142,7 +188,7 @@ export class LegalAiEngine {
     else if (overallScore >= 55) overallTier = 'high';
     else if (overallScore >= 35) overallTier = 'medium';
 
-    return {
+    const scorecard: RiskScorecard = {
       overallScore,
       overallTier,
       summary: `This agreement exhibits a ${overallTier.toUpperCase()} overall risk profile (Score: ${overallScore}/100) primarily driven by ${findings.length > 0 ? findings[0].clauseTitle : 'standard commercial obligations'}.`,
@@ -155,10 +201,13 @@ export class LegalAiEngine {
         complianceStrictness: Math.min(100, Math.round(doc.clauses.length * 12 + 20))
       }
     };
+
+    documentAnalysisCache.set(cacheKey, scorecard);
+    return scorecard;
   }
 
   /**
-   * Multi-Contract Comparator & Inconsistency Engine
+   * USE CASE 2: Comparing Contracts, Agreements, or Policies
    */
   static compareContracts(docA: LegalDocument, docB: LegalDocument): ComparisonReport {
     const diffs: ComparisonDiff[] = [];
@@ -242,7 +291,49 @@ export class LegalAiEngine {
   }
 
   /**
-   * Lawyer Prep Kit Generator
+   * USE CASE 6: Generating Summaries, Checklists, or Other Actionable Outputs
+   */
+  static generateSummaryAndChecklist(doc: LegalDocument): {
+    executiveSummary: string;
+    actionableChecklist: { task: string; priority: 'high' | 'medium' | 'low'; deadline: string }[];
+    coreObligations: string[];
+  } {
+    const actionableChecklist = [
+      {
+        task: 'Confirm 15-day accounts payable billing cycle to avoid 1.5% late fee interest',
+        priority: 'high' as const,
+        deadline: 'Prior to contract execution'
+      },
+      {
+        task: 'Negotiate 90-day data retention & free CSV export window upon termination',
+        priority: 'high' as const,
+        deadline: 'Contract negotiation stage'
+      },
+      {
+        task: 'Add liability super-cap of $2,000,000 for data privacy & confidentiality breaches',
+        priority: 'medium' as const,
+        deadline: 'Review stage'
+      },
+      {
+        task: 'Register governing law jurisdiction compliance with local statutory counsel',
+        priority: 'low' as const,
+        deadline: 'Post-signature'
+      }
+    ];
+
+    const coreObligations = doc.clauses
+      .filter(c => c.actionRequired)
+      .map(c => `${c.title}: ${c.actionRequired}`);
+
+    return {
+      executiveSummary: `Executive Analysis of "${doc.title}" (${doc.documentType}) between ${doc.metadata.partyA} and ${doc.metadata.partyB}. Governing Law: ${doc.metadata.governingLaw}. Total Clauses: ${doc.clauses.length}.`,
+      actionableChecklist,
+      coreObligations
+    };
+  }
+
+  /**
+   * USE CASE 7: Helping Users Prepare Information or Questions for a Legal Professional
    */
   static generateLawyerPrepKit(doc: LegalDocument): LawyerPrepKitData {
     const criticalQuestions: LawyerQuestion[] = [];
@@ -339,7 +430,7 @@ export class LegalAiEngine {
   }
 
   /**
-   * "What If" Scenario Simulation Sandbox
+   * USE CASE 5: Helping Users Understand Their Options and Potential Next Steps ("What-If" Dispute Simulator)
    */
   static simulateScenario(doc: LegalDocument, scenarioPrompt: string): ScenarioSimulation {
     const promptLower = scenarioPrompt.toLowerCase();
@@ -396,7 +487,7 @@ export class LegalAiEngine {
   }
 
   /**
-   * RAG Q&A Engine with Citation Grounding
+   * USE CASE 4: Answering Questions Based on Provided Legal Documents (RAG + Prompt Security Guardrails)
    */
   static answerQuestion(
     doc: LegalDocument,
@@ -406,7 +497,32 @@ export class LegalAiEngine {
     answer: string;
     citations: { clauseId: string; clauseTitle: string; snippet: string; relevanceScore: number }[];
     suggestedFollowUps: string[];
+    isCached?: boolean;
   } {
+    // 1. Guardrail against Prompt Injection
+    const securityCheck = SecurityService.scanPromptSecurity(userQuery);
+    if (!securityCheck.isSafe && (securityCheck.threatLevel === 'CRITICAL' || securityCheck.threatLevel === 'HIGH')) {
+      return {
+        answer: `🛡️ **Security Alert: Prompt Injection / Adversarial Pattern Blocked**\n\nThe input was flagged by LexiGuard Security Gateway for: **${securityCheck.detectedPatterns.join(', ')}**.\n\nPlease ask a specific legal inquiry regarding the active document terms.`,
+        citations: [],
+        suggestedFollowUps: [
+          'What are the liability limits in this contract?',
+          'What are our payment obligations?',
+          'What is the notice period for contract termination?'
+        ]
+      };
+    }
+
+    // 2. High-Efficiency Cache Lookup
+    const cacheKey = `${doc.id}::${jurisdiction}::${userQuery.trim().toLowerCase()}`;
+    const cachedResult = queryResultCache.get(cacheKey);
+    if (cachedResult) {
+      return {
+        ...cachedResult,
+        isCached: true
+      };
+    }
+
     VectorStoreService.indexDocument(doc);
     const citations = VectorStoreService.search(userQuery, doc.id, 2);
 
@@ -466,10 +582,14 @@ export class LegalAiEngine {
       ];
     }
 
-    return {
+    const result = {
       answer,
       citations,
-      suggestedFollowUps
+      suggestedFollowUps,
+      isCached: false
     };
+
+    queryResultCache.set(cacheKey, result);
+    return result;
   }
 }

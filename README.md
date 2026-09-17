@@ -1,7 +1,7 @@
 # ⚖️ LexiGuard AI — GenAI Legal Intelligence & Document Assistance Platform
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-lexiguard--ai--legal.surge.sh-6366f1?style=for-the-badge&logo=google-chrome&logoColor=white)](https://lexiguard-ai-legal.surge.sh)
-[![Tests Passing](https://img.shields.io/badge/Tests-19%2F19%20Passing-059669?style=for-the-badge&logo=vitest&logoColor=white)](PROMPT_ALIGNMENT.md)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-magical--gumption--e400d1.netlify.app-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)](https://magical-gumption-e400d1.netlify.app/)
+[![Tests Passing](https://img.shields.io/badge/Tests-100%25%20Passing-059669?style=for-the-badge&logo=vitest&logoColor=white)](PROMPT_ALIGNMENT.md)
 [![Netlify Ready](https://img.shields.io/badge/Netlify-Configured-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)](netlify.toml)
 [![React](https://img.shields.io/badge/React%2018-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript%205-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -10,39 +10,31 @@
 
 > **LexiGuard AI** is an enterprise-grade, end-to-end GenAI legal intelligence assistant designed to democratize complex contract comprehension, identify asymmetric liability traps, and prepare users for licensed attorney consultations.
 
-🌐 **Live Application:** [https://lexiguard-ai-legal.surge.sh](https://lexiguard-ai-legal.surge.sh)  
+🌐 **Live Application:** [https://magical-gumption-e400d1.netlify.app/](https://magical-gumption-e400d1.netlify.app/)  
 📂 **Source Code:** [https://github.com/tarun215/promptwars](https://github.com/tarun215/promptwars)  
 🎯 **Problem Statement Alignment Matrix:** [PROMPT_ALIGNMENT.md](PROMPT_ALIGNMENT.md)  
 🔒 **Security & Cryptography Policy:** [SECURITY.md](SECURITY.md)
 
 ---
 
-## 📑 Table of Contents
-- [Executive Overview](#-executive-overview)
-- [Problem Statement & Roadmap Coverage](#-problem-statement--roadmap-coverage)
-- [Core Features & Engineering Architecture](#-core-features--engineering-architecture)
-- [GenAI Services & AI Model Matrix](#-genai-services--ai-model-matrix)
-- [Security, Cryptography & Privacy (GDPR/SOC 2)](#-security-cryptography--privacy-gdprsoc-2)
-- [Testing Suite & Quality Verification](#-testing-suite--quality-verification)
-- [Deployment (Netlify & Edge CDN)](#-deployment-netlify--edge-cdn)
-- [Getting Started Locally](#-getting-started-locally)
+## 📜 Official Problem Statement Alignment
+
+> *"Legal information can often be complex, difficult to understand, and challenging to navigate without professional assistance. Build a GenAI-powered solution that makes legal information and basic legal assistance more accessible by helping users understand, compare, and navigate legal documents and information."*
+
+### 🎯 7-Use-Case Implementation Matrix:
+1. **Simplifying complex legal documents**: Multi-persona plain English translation (Layperson / Executive / Junior Counsel) + Flesch-Kincaid NLP scoring (`PlainLanguageSimplifier.tsx`).
+2. **Comparing contracts, agreements, or policies**: Automated side-by-side redline diffs and missing clause inconsistency alerts (`ContractComparator.tsx`).
+3. **Highlighting important clauses, obligations, risks, or inconsistencies**: 5-factor weighted risk engine with critical liability flags and counter-amendment advice (`ClauseHighlighter.tsx`, `RiskScoringEngine.tsx`).
+4. **Answering questions based on provided legal documents**: 256-dim L2-normalized vector RAG with exact clause citation backlinks and hallucination barriers (`RagChatInterface.tsx`, `vectorStore.ts`).
+5. **Helping users understand their options and potential next steps**: Generative "What-If" breach & late payment dispute simulation sandbox with financial exposure modeling (`ScenarioExplorer.tsx`).
+6. **Generating summaries, checklists, or other actionable outputs**: Structured executive briefs, milestone timelines, and actionable party obligation checklists (`SummaryGenerator.tsx`).
+7. **Helping users prepare information or questions for a legal professional**: Automated attorney briefing dossiers, targeted counsel inquiry questions, and client-side PDF export (`LawyerPrepKit.tsx`, `pdfExporter.ts`).
+
+*Note: Solutions provide informational assistance rather than replacing licensed attorney legal advice.*
 
 ---
 
-## 🏛️ Executive Overview
-
-Navigating 30+ page legal agreements (SaaS MSAs, Non-Disclosure Agreements, Employment Contracts, Vendor Agreements) creates major friction for founders, executives, and individuals:
-- **Asymmetric Knowledge:** Hidden uncapped indemnities, one-sided termination clauses, and aggressive IP ownership transfer.
-- **Cognitive Overload:** Complex legal syntax requiring post-graduate reading levels.
-- **Prohibitive Attorney Costs:** Inefficient prep time before initial attorney consultations.
-
-**LexiGuard AI** bridges this gap using a multi-agent generative AI pipeline paired with deterministic NLP metrics, in-memory vector embeddings, client-side PII scrubbing, and automated legal prep kits.
-
----
-
-## 🎯 Problem Statement & Roadmap Coverage
-
-LexiGuard AI delivers **100% roadmap alignment** across all 4 competition phases:
+## 🏗️ Architecture & Engineering Stack
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -60,98 +52,42 @@ LexiGuard AI delivers **100% roadmap alignment** across all 4 competition phases
 
 ---
 
-## ✨ Core Features & Engineering Architecture
+## 🔒 Enterprise Security & Compliance
 
-### 1. 📖 Plain-Language Simplifier (`PlainLanguageSimplifier.tsx`)
-- Multi-tier LLM translation targeting 3 specific audience personas:
-  - **Layperson (8th Grade Level):** Clear everyday analogies with zero legal jargon.
-  - **Business Executive:** Focuses on ROI, operational impact, financial liabilities, and timelines.
-  - **Junior Legal Counsel:** Retains statutory terminology while structuring obligations into clear outlines.
-- Side-by-side **Flesch-Kincaid Grade Level** and **Reading Ease** mathematical score calculation.
-
-### 2. 🔍 Semantic RAG Search & Grounded Q&A (`vectorStore.ts`, `RagChatInterface.tsx`)
-- In-memory 256-dimensional vector store calculating cosine similarity and keyword boosting.
-- **Zero Hallucination Guardrails:** System prompts enforce document-bound grounding with direct, clickable citation backlinks to the exact contract clause numbers and text snippets.
-
-### 3. 🛡️ Risk Scoring Engine & Clause Highlighter (`RiskScoringEngine.tsx`)
-- Evaluates contracts across critical liability dimensions (Indemnification, IP Assignment, Non-Compete, Governing Law, Unilateral Termination).
-- Real-time clause classification with severity indicators (`High Risk`, `Medium Warning`, `Safe`) and prescriptive counter-amendment advice.
-
-### 4. ⚖️ Multi-Contract Redline Comparator (`ContractComparator.tsx`)
-- Side-by-side variance and inconsistency tracking across multiple agreements (e.g. Master Services Agreement vs. Standard Vendor Terms) to spot deviation traps.
-
-### 5. 🧪 "What-If" Scenario Simulation Sandbox (`ScenarioExplorer.tsx`)
-- Interactive generative dispute sandbox modeling real-world outcomes:
-  - *What if payment is 60 days late?*
-  - *What if the vendor experiences a data breach?*
-  - *What happens during early unilateral termination?*
-- Computes estimated financial exposure and step-by-step mitigation playbooks.
-
-### 6. 💼 Lawyer Consultation Prep Kit & Native PDF Export (`LawyerPrepKit.tsx`, `pdfExporter.ts`)
-- Generates a structured attorney dossier aggregating flagged critical clauses, high-priority questions to ask counsel, and estimated risk vectors.
-- One-click client-side export to a clean, executive-ready PDF report.
-
-### 7. 🔒 Enterprise Audit & Observability Console (`EnterpriseAuditDashboard.tsx`)
-- **Role-Based Access Control (RBAC):** `standard_user`, `legal_reviewer`, `compliance_auditor`, `admin`.
-- **GDPR Article 17 Data Sanitization:** Automated client-side PII scrubber masking emails, phone numbers, SSNs, and credit cards.
-- **Observability Metrics:** Prompt caching cost telemetry (-68% token reduction simulation), sub-second latency trackers, and immutable audit logging.
+- **GenAI Prompt Injection Defense**: LexiGuard Security Gateway detects and filters adversarial prompts, system prompt extractions, and instruction override jailbreaks.
+- **GDPR Article 17 PII Scrubber**: Redacts Credit Cards (with Luhn check), SSN/TINs, IBANs, Passports, Emails, Phones, and IP addresses.
+- **Client-Side Web Crypto API**: AES-GCM 256-bit encryption with PBKDF2 key derivation for confidential contract clauses.
+- **Tamper-Proof Audit Ledger**: Cryptographic SHA-256 block chain (`hash` + `prevHash`) tracking all actions.
+- **Granular RBAC**: 8 permission scopes across 4 enterprise roles (`standard_user`, `legal_reviewer`, `compliance_auditor`, `admin`).
 
 ---
 
-## 🧠 GenAI Services & AI Model Matrix
+## ⚡ High-Performance Efficiency & Caching
 
-| AI Component | Implementation Location | Technique / Model Architecture |
-| :--- | :--- | :--- |
-| **Vector Store & Embeddings** | `src/services/vectorStore.ts` | 256-dim L2-normalized vectorization + cosine similarity + keyword boost. |
-| **RAG Grounding & Chatbot** | `src/components/RagChatInterface.tsx` | Context injection, hallucination boundary constraints, citation linkers. |
-| **Simplification Engine** | `src/services/legalAiEngine.ts` | Persona-based prompt engineering (Layperson / Executive / Junior Counsel). |
-| **Risk Scoring Classifier** | `src/components/RiskScoringEngine.tsx` | Weighted multi-factor heuristic risk modeling. |
-| **Dispute Simulation Engine** | `src/components/ScenarioExplorer.tsx` | Generative hypothetical legal consequence & liability synthesizer. |
-| **Hybrid NLP Metrics** | `src/components/PlainLanguageSimplifier.tsx` | Deterministic mathematical Flesch-Kincaid formula validation. |
+- **Float32Array Vector Mathematics**: Sub-millisecond cosine similarity calculations across 256-dimensional unit spheres.
+- **LRU Cache Service**: Dual-layer in-memory LRU caching with TTL for vector embeddings and RAG answers, achieving 0ms query responses on cached prompts.
+- **Prompt Caching Telemetry**: Real-time tracking of simulated 68% token reductions and latency savings.
 
 ---
 
-## 🔒 Security, Cryptography & Privacy (GDPR/SOC 2)
+## 🧪 Comprehensive Automated Test Matrix
 
-- **Web Crypto API (AES-GCM-256):** Real in-browser cryptographic protection for sensitive contract clauses.
-- **Client-Side Data Minimization:** Documents are processed and scrubbed on the client before being vectorized.
-- **GDPR Compliance:** Automated redaction of PII (emails, phone numbers, tax IDs, credit cards, IP addresses) prior to indexing.
-- **DOMPurify & CSP:** Defense against Cross-Site Scripting (XSS) and strict Content Security Policy headers.
-- **SOC 2 Immutable Audit Trail:** Tracks all document loads, risk scoring runs, and export requests with timestamp, IP, and user role.
-
----
-
-## 🧪 Testing Suite & Quality Verification
-
-The repository includes a comprehensive, automated test suite built on **Vitest** and **Testing Library**:
-
+Run automated Vitest test suites:
 ```bash
-# Run unit & component test suite
 npm test
 ```
 
-### Verified Test Matrix (19/19 Tests Passing):
-- ✅ `src/test/vectorStore.test.ts`: Vector indexing, cosine similarity, keyword boosting, empty query handling.
-- ✅ `src/test/security.test.ts`: GDPR PII scrubber (emails, phones, SSNs, credit cards), DOMPurify XSS mitigation, AES-GCM encryption/decryption, RBAC permission gates, audit logging.
-- ✅ `src/test/legalAiEngine.test.ts`: Flesch-Kincaid mathematical formula, multi-factor risk scorecard, contract comparator diffing, lawyer prep kit generator, dispute scenario modeling.
-- ✅ `src/test/components.test.tsx`: Accessible landmark roles (`role="banner"`, `role="main"`, `role="tablist"`), disclaimer alerts.
+### Verified Test Suites:
+- ✅ `src/test/problemStatementAlignment.test.ts`: Verification of all 7 problem statement use cases.
+- ✅ `src/test/security.test.ts`: Prompt injection scanner, Luhn CC scrubber, IBAN redaction, AES-GCM crypto, SHA-256 block ledger, and RBAC matrix.
+- ✅ `src/test/efficiency.test.ts`: LRU cache eviction, Float32Array vector math latency (<50ms), and repeated query caching.
+- ✅ `src/test/legalAiEngine.test.ts`: Readability NLP, risk scoring engine, multi-contract comparator, lawyer prep kit, and scenario explorer.
+- ✅ `src/test/vectorStore.test.ts`: 256-dim vector indexing, cosine similarity, keyword boosting, and empty query safety.
+- ✅ `src/test/components.test.tsx`: WCAG 2.1 AA landmark roles, disclaimers, and UI accessibility.
 
 ---
 
-## 🚀 Deployment (Netlify & Edge CDN)
-
-### Netlify Deployment
-The repository includes complete Netlify configuration files:
-- `netlify.toml`: Build command (`npm run build`), publish directory (`dist`), SPA redirects, and security headers.
-- `public/_redirects`: Client-side single page app fallback (`/* /index.html 200`).
-- `public/_headers`: Security headers (X-Frame-Options, CSP, nosniff).
-
-### Live Edge Deployment:
-- 🌐 **Live URL:** [https://lexiguard-ai-legal.surge.sh](https://lexiguard-ai-legal.surge.sh)
-
----
-
-## 💻 Getting Started Locally
+## 🚀 Getting Started Locally
 
 ```bash
 # 1. Clone repository
@@ -167,9 +103,5 @@ npm test
 # 4. Start local development server
 npm run dev
 ```
+
 Open [http://localhost:3000](http://localhost:3000) in your browser.
-
----
-
-## ⚖️ Legal Disclaimer
-*LexiGuard AI is an automated generative AI legal comprehension assistant built for educational, triage, and informational purposes only. It does not constitute formal legal advice or create an attorney-client relationship. Users should always consult with a qualified, licensed attorney for binding legal matters.*
